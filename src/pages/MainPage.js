@@ -1,18 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 function MainPage() {
-  // const [socketData, setSocketData] = useState(null);
-  // const [isAllowed, setIsAllowed] = useState(null);
   const [publicIP, setPublicIP] = useState('');
-  // const [responseCount, setResponseCount] = useState(0); // 응답 횟수 상태 추가
-
   const [responsesCount, setResponsesCount] = useState(0); // 응답 횟수 상태
   const [totalLatency, setTotalLatency] = useState(0); // 총 latency 상태
   const [averageLatency, setAverageLatency] = useState(null); // 평균 latency 상태
   const [socket, setSocket] = useState(null); // WebSocket 상태
+  const [isSocketClosed, setIsSocketClosed] = useState(false); // WebSocket 종료 상태
   const requestCountRef = useRef(0); // 요청 횟수 useRef로 관리
 
-  
+  const storeResult = async () => {
+    const token = localStorage.getItem('token');
+
+    console.log('token : ', token);
+    if (token) {
+      try {
+        const response = await fetch('http://localhost:8080/ping/storeResult', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ averageLatency })
+        });
+        console.log('요청결과 : ', response);
+        if (response.ok) {
+          alert('저장 완료');
+          window.location.href = '/user/myPage';
+        } else {
+          alert('로그인이 필요합니다');
+          window.location.href = '/user/signIn';
+        }
+      } catch (error) {
+        alert('로그인이 필요합니다');
+        window.location.href = '/user/signIn';
+      }
+    } else {
+      window.location.href = '/user/signIn';
+    }
+  }
+
   useEffect(() => {
     const fetchPublicIP = async () => {
       try {
@@ -27,68 +54,59 @@ function MainPage() {
   }, []);
 
   useEffect(() => {
-    if (isAllowed) {
-      // WebSocket 연결
-      const ws = new WebSocket('ws://localhost:8080/networkLatencyWebSocketConnection');
+    const newSocket = new WebSocket('ws://localhost:8080/networkLatencyWebSocketConnection');
+    setSocket(newSocket);
 
-      // 소켓 연결될 때 실행되는 함수
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-      };
+    newSocket.onopen = () => {
+      setIsSocketClosed(false); // WebSocket이 열렸을 때 상태 업데이트
+    };
 
-      // 메시지를 수신할 때 실행되는 함수
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        setSocketData(data);
-        setResponseCount(prevCount => prevCount + 1);
-      };
+    newSocket.onclose = () => {
+      console.log('WebSocket connection closed');
+      setIsSocketClosed(true); // WebSocket이 닫혔을 때 상태 업데이트
+    };
 
-      // 컴포넌트가 언마운트될 때 WebSocket 연결 해제
-      return () => {
-        
-        ws.close();
-      };
-    }
-  }, [isAllowed]);
+    return () => {
+      newSocket.close();
+    };
+  }, []);
 
-  if (isAllowed === null) {
-    return (
-      <div>
-        <div className='guideButtonBox'>
-          <h1 className='userIP'>방화벽 확인 필요.</h1>
-          <button onClick={() => window.location.href = '/guidePage'}>
-            방화벽 가이드로 이동
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!socket) return;
 
-  if (!isAllowed) {
-    return (
-      <div>
-        <div className='guideButtonBox'>
-          <h1 className='userIP'>방화벽 확인 필요.</h1>
-          <button onClick={() => window.location.href = '/guidePage'}>
-            방화벽 가이드로 이동
-          </button>
-        </div>
-      </div>
-    );
-  }
+    const maxRequests = 10;
 
-  if (!socketData) {
-    return (
-      <div>
-        <div className='guideButtonBox'>
-          <h1 className='userIP'>방화벽 확인 필요.</h1>
-          <button onClick={() => window.location.href = '/guidePage'}>
-            방화벽 가이드로 이동
-          </button>
-        </div>
-      </div>
-    );
-  }
+    const interval = setInterval(() => {
+      if (requestCountRef.current < maxRequests) {
+        const clientTimeStamp = new Date().getTime();
+        const message = {
+          clientTimeStamp: clientTimeStamp
+        };
+        socket.send(JSON.stringify(message));
+        requestCountRef.current++;
+      } else {
+        socket.close();
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    socket.onmessage = (event) => {
+      const serverResponseData = JSON.parse(event.data);
+      if (serverResponseData.hasOwnProperty('latency')) {
+        const latency = serverResponseData.latency;
+
+        setResponsesCount(prevCount => prevCount + 1);
+        setTotalLatency(prevLatency => prevLatency + latency);
+
+        const average = (totalLatency + latency) / (responsesCount + 1);
+        setAverageLatency(average.toFixed(2));
+      }
+    };
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [socket, responsesCount, totalLatency]);
 
   return (
     <div>
@@ -97,14 +115,13 @@ function MainPage() {
         Server IP : 54.180.58.154 <br />
       </h1>
       <div className='myBox'>
-        <h1>평균 응답시간 : {socketData.averageResponseTime}ms</h1>
-        {socketData.running ? null : (
+        <h1>Latency Time : {averageLatency}ms</h1>
+        <h2>Test Count : {responsesCount}</h2> {/* 응답 횟수 표시 */}
+        {isSocketClosed && ( // WebSocket이 닫혔을 때만 버튼 표시
           <div>
-            <h1>패킷 손실 비율 : {socketData.packetLossRate}</h1>
             <button className='storeButton' onClick={storeResult}>결과 저장하기</button>
           </div>
         )}
-        <h2>응답 횟수 : {responseCount}</h2> {/* 응답 횟수 표시 */}
       </div>
     </div>
   );
