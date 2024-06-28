@@ -29,7 +29,7 @@ function MyPage() {
   useEffect(() => {
     const fetchNickName = async () => {
       try {
-        const response = await fetch('http://localhost:8080/user/getUserNickName', {
+        const response = await fetch('http://scc9811.site:8080/user/getUserNickName', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ function MyPage() {
   useEffect(() => {
     const fetchTestResults = async () => {
       try {
-        const response = await fetch('http://localhost:8080/ping/getTestResult', {
+        const response = await fetch('http://scc9811.site:8080/ping/getTestResult', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

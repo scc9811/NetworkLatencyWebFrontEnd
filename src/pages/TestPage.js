@@ -9,7 +9,7 @@ const TestPage = () => {
 
   useEffect(() => {
     // WebSocket 연결
-    const newSocket = new WebSocket('ws://localhost:8080/networkLatencyWebSocketConnection');
+    const newSocket = new WebSocket('ws://scc9811.site:8080/networkLatencyWebSocketConnection');
     setSocket(newSocket);
 
     // 컴포넌트가 언마운트될 때 WebSocket 연결 닫기

@@ -15,7 +15,7 @@ function MainPage() {
     console.log('token : ', token);
     if (token) {
       try {
-        const response = await fetch('http://localhost:8080/ping/storeResult', {
+        const response = await fetch('http://scc9811.site:8080/ping/storeResult', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -43,7 +43,7 @@ function MainPage() {
   useEffect(() => {
     const fetchPublicIP = async () => {
       try {
-        const response = await fetch('http://localhost:8080/ping/getClientIP');
+        const response = await fetch('http://scc9811.site:8080/ping/getClientIP');
         const data = await response.text();
         setPublicIP(data);
       } catch (error) {
@@ -54,7 +54,7 @@ function MainPage() {
   }, []);
 
   useEffect(() => {
-    const newSocket = new WebSocket('ws://localhost:8080/networkLatencyWebSocketConnection');
+    const newSocket = new WebSocket('ws://scc9811.site:8080/networkLatencyWebSocketConnection');
     setSocket(newSocket);
 
     newSocket.onopen = () => {

@@ -17,7 +17,7 @@ const FirewallGuidePage = () => {
   const handleButtonClick = async () => {
     setLoading(true); // 요청 시작 전에 로딩 상태 설정
     try {
-      const response = await fetch('http://localhost:8080/ping/isICMPInboundAllowed');
+      const response = await fetch('http://scc9811.site:8080/ping/isICMPInboundAllowed');
       const data = await response.json();
       console.log('allowed = ', data.allowed);
       if (data.allowed) {
@@ -111,35 +111,6 @@ const FirewallGuidePage = () => {
         다시 테스트 시도하기.
       </button>
     </div>
-    // <div className='a'>
-    // <div className='gallery-container'> 
-    //   <img src={image1} className='responsive-image' />
-    //     <img src={image2} className='responsive-image' />
-    //     <img src={image3} className='responsive-image' />
-    //     <img src={image4} className='responsive-image' />
-    //     <img src={image5} className='responsive-image' />
-    //     <img src={image6} className='responsive-image' />
-    //     <img src={image7} className='responsive-image' />
-    //     <img src={image8} className='responsive-image' />
-    //     <img src={image9} className='responsive-image' />
-    //     <img src={image10} className='responsive-image' />
-    // </div>
-
-    // </div>
-    // <div>
-    //   <h1 style={styles.heading}>이미지 순서대로 진행해주세요.</h1>
-      
-      // <button
-      //   style={styles.button}
-      //   onMouseOver={(e) => (e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor)}
-      //   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = styles.button.backgroundColor)}
-      //   onClick={handleButtonClick}
-      // >
-      //   방화벽 설정 완료. <br />
-      //   다시 테스트 시도하기.
-      // </button>
-      // {message && <p style={styles.message}>{message}</p>}
-    // </div>
   );
 };
 
