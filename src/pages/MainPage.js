@@ -108,12 +108,87 @@ function MainPage() {
     };
   }, [socket, responsesCount, totalLatency]);
 
+  useEffect(() => {
+    const initMap = () => {
+      const centerPoint = { lat: 37.5665, lng: 126.9780 };
+
+      const map = new window.google.maps.Map(document.getElementById('map'), {
+        zoom: 8,
+        center: centerPoint
+      });
+
+      const pointA = { lat: 37.8747, lng: 127.7342 };
+      const markerA = new window.google.maps.Marker({
+        position: pointA,
+        map: map,
+        title: 'YOU',
+        label: {
+          text: 'YOU',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '12px',
+          className: 'map-label'
+        },
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 25,
+          fillColor: '#FF0000',
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: '#FFFFFF'
+        }
+      });
+
+      const pointB = { lat: 37.5665, lng: 126.9780 };
+      const markerB = new window.google.maps.Marker({
+        position: pointB,
+        map: map,
+        title: 'SERVER',
+        label: {
+          text: 'SERVER',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '12px',
+          className: 'map-label'
+        },
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 25,
+          fillColor: '#0000FF',
+          fillOpacity: 1,
+          strokeWeight: 2,
+          strokeColor: '#FFFFFF'
+        }
+      });
+
+      const line = new window.google.maps.Polyline({
+        path: [pointA, pointB],
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+      });
+
+      line.setMap(map);
+    };
+
+    if (window.google) {
+      initMap();
+    } else {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyD2n27g34TSYRbMdDrdl3ZxlwtvAZa05tA`;
+      script.onload = initMap;
+      document.head.appendChild(script);
+    }
+  }, []);
+
   return (
     <div>
       <h1 className='userIP'>
         Your Public IP : {publicIP} <br />
         Server IP : 54.180.58.154 <br />
       </h1>
+      <div id="map" style={{ height: '500px', width: '100%' }}></div>
       <div className='myBox'>
         <h1>Latency Time : {averageLatency}ms</h1>
         <h2>Test Count : {responsesCount}</h2> {/* 응답 횟수 표시 */}

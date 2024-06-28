@@ -183,7 +183,7 @@ button {
 .userIP {
     top: 5%;
     left: 5%;
-    position: absolute;
+    /* position: absolute; */
     color: #e5e5e5;
     line-height: 50px;
 }
@@ -255,22 +255,20 @@ button {
     color: #e5e5e5;
 } */
 .myBox {
-    max-width: 100%; /* 최대 너비 설정 */
+    max-width: 50%; /* 최대 너비 설정 */
     max-height: 100%; /* 최대 높이 설정 */
     overflow: auto; /* 내용이 넘칠 경우 스크롤바 추가 */
     height: auto; /* 높이 자동으로 조절 */
     width: auto; /* 너비 자동으로 조절 */
     background-color: rgba(104, 178, 243, 0.13);
-    position: absolute;
-    transform: translate(-50%, -50%);
-    top: 50%;
-    left: 50%;
     border-radius: 10px;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
     padding: 50px 35px;
     color: #e5e5e5;
+    margin-top: 20px;
+    margin-left: 25%;
 }
 
 /*
