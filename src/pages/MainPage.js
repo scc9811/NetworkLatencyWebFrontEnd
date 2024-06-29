@@ -113,7 +113,7 @@ function MainPage() {
   useEffect(() => {
     const fetchServerLocation = async () => {
       try {
-        const response = await fetch('http://localhost:8080/map/getServerLocation');
+        const response = await fetch('http://scc9811.site:8080/map/getServerLocation');
         const data = await response.json();
         if (data.latitude && data.longitude) {
           setServerLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
@@ -125,7 +125,7 @@ function MainPage() {
 
     const fetchClientLocation = async () => {
       try {
-        const response = await fetch('http://localhost:8080/map/getClientLocation');
+        const response = await fetch('http://scc9811.site:8080/map/getClientLocation');
         const data = await response.json();
         if (data.latitude && data.longitude) {
           setClientLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
