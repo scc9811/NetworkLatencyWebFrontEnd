@@ -8,6 +8,8 @@ function MainPage() {
   const [socket, setSocket] = useState(null); // WebSocket 상태
   const [isSocketClosed, setIsSocketClosed] = useState(false); // WebSocket 종료 상태
   const requestCountRef = useRef(0); // 요청 횟수 useRef로 관리
+  const [serverLocation, setServerLocation] = useState(null); // 서버 위치 상태
+  const [clientLocation, setClientLocation] = useState(null); // 클라이언트 위치 상태
 
   const storeResult = async () => {
     const token = localStorage.getItem('token');
@@ -109,7 +111,38 @@ function MainPage() {
   }, [socket, responsesCount, totalLatency]);
 
   useEffect(() => {
+    const fetchServerLocation = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/map/getServerLocation');
+        const data = await response.json();
+        if (data.latitude && data.longitude) {
+          setServerLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
+        }
+      } catch (error) {
+        console.error('Error fetching server location:', error);
+      }
+    };
+
+    const fetchClientLocation = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/map/getClientLocation');
+        const data = await response.json();
+        if (data.latitude && data.longitude) {
+          setClientLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
+        }
+      } catch (error) {
+        console.error('Error fetching client location:', error);
+      }
+    };
+
+    fetchServerLocation();
+    fetchClientLocation();
+  }, []);
+
+  useEffect(() => {
     const initMap = () => {
+      if (!serverLocation || !clientLocation) return;
+
       const centerPoint = { lat: 37.5665, lng: 126.9780 };
 
       const map = new window.google.maps.Map(document.getElementById('map'), {
@@ -117,9 +150,9 @@ function MainPage() {
         center: centerPoint
       });
 
-      const pointA = { lat: 37.8747, lng: 127.7342 };
       const markerA = new window.google.maps.Marker({
-        position: pointA,
+        position: clientLocation,
+        // position: { lat: 37.5665, lng: 126.9780 },
         map: map,
         title: 'YOU',
         label: {
@@ -139,9 +172,9 @@ function MainPage() {
         }
       });
 
-      const pointB = { lat: 37.5665, lng: 126.9780 };
       const markerB = new window.google.maps.Marker({
-        position: pointB,
+        position: serverLocation,
+        // position: { lat: 37.5665, lng: 126.9780 },
         map: map,
         title: 'SERVER',
         label: {
@@ -162,7 +195,7 @@ function MainPage() {
       });
 
       const line = new window.google.maps.Polyline({
-        path: [pointA, pointB],
+        path: [clientLocation, serverLocation],
         geodesic: true,
         strokeColor: '#FF0000',
         strokeOpacity: 1.0,
@@ -171,16 +204,18 @@ function MainPage() {
 
       line.setMap(map);
     };
+    console.log(serverLocation);
+    console.log(clientLocation);
 
-    if (window.google) {
+    if (window.google && serverLocation && clientLocation) {
       initMap();
-    } else {
+    } else if (serverLocation && clientLocation) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyD2n27g34TSYRbMdDrdl3ZxlwtvAZa05tA`;
       script.onload = initMap;
       document.head.appendChild(script);
     }
-  }, []);
+  }, [serverLocation, clientLocation]);
 
   return (
     <div>
