@@ -5,9 +5,7 @@ function MainPage() {
   const [responsesCount, setResponsesCount] = useState(0); // 응답 횟수 상태
   const [totalLatency, setTotalLatency] = useState(0); // 총 latency 상태
   const [averageLatency, setAverageLatency] = useState(null); // 평균 latency 상태
-  const [socket, setSocket] = useState(null); // WebSocket 상태
-  const [isSocketClosed, setIsSocketClosed] = useState(false); // WebSocket 종료 상태
-  const requestCountRef = useRef(0); // 요청 횟수 useRef로 관리
+  const [isTestCompleted, setIsTestCompleted] = useState(false); // 핑 테스트 완료 상태
   const [serverLocation, setServerLocation] = useState(null); // 서버 위치 상태
   const [clientLocation, setClientLocation] = useState(null); // 클라이언트 위치 상태
 
@@ -56,59 +54,38 @@ function MainPage() {
   }, []);
 
   useEffect(() => {
-    const newSocket = new WebSocket('ws://scc9811.site:8080/networkLatencyWebSocketConnection');
-    setSocket(newSocket);
-
-    newSocket.onopen = () => {
-      setIsSocketClosed(false); // WebSocket이 열렸을 때 상태 업데이트
-    };
-
-    newSocket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setIsSocketClosed(true); // WebSocket이 닫혔을 때 상태 업데이트
-    };
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!socket) return;
-
     const maxRequests = 10;
 
-    const interval = setInterval(() => {
-      if (requestCountRef.current < maxRequests) {
-        const clientTimeStamp = new Date().getTime();
-        const message = {
-          clientTimeStamp: clientTimeStamp
-        };
-        socket.send(JSON.stringify(message));
-        requestCountRef.current++;
-      } else {
-        socket.close();
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    socket.onmessage = (event) => {
-      const serverResponseData = JSON.parse(event.data);
-      if (serverResponseData.hasOwnProperty('latency')) {
-        const latency = serverResponseData.latency;
+    const pingServer = async () => {
+      const start = new Date().getTime();
+      try {
+        await fetch('http://scc9811.site/', { method: 'HEAD', mode:'no-cors' });
+        const end = new Date().getTime();
+        const latency = end - start;
 
         setResponsesCount(prevCount => prevCount + 1);
         setTotalLatency(prevLatency => prevLatency + latency);
 
         const average = (totalLatency + latency) / (responsesCount + 1);
         setAverageLatency(average.toFixed(2));
+      } catch (error) {
+        console.error('Error pinging server:', error);
       }
     };
+
+    const interval = setInterval(() => {
+      if (responsesCount < maxRequests) {
+        pingServer();
+      } else {
+        setIsTestCompleted(true);
+        clearInterval(interval);
+      }
+    }, 1000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [socket, responsesCount, totalLatency]);
+  }, [responsesCount, totalLatency]);
 
   useEffect(() => {
     const fetchServerLocation = async () => {
@@ -152,7 +129,6 @@ function MainPage() {
 
       const markerA = new window.google.maps.Marker({
         position: clientLocation,
-        // position: { lat: 37.5665, lng: 126.9780 },
         map: map,
         title: 'YOU',
         label: {
@@ -174,7 +150,6 @@ function MainPage() {
 
       const markerB = new window.google.maps.Marker({
         position: serverLocation,
-        // position: { lat: 37.5665, lng: 126.9780 },
         map: map,
         title: 'SERVER',
         label: {
@@ -227,7 +202,7 @@ function MainPage() {
       <div className='myBox'>
         <h1>Latency Time : {averageLatency}ms</h1>
         <h2>Test Count : {responsesCount}</h2> {/* 응답 횟수 표시 */}
-        {isSocketClosed && ( // WebSocket이 닫혔을 때만 버튼 표시
+        {isTestCompleted && ( // 핑 테스트가 완료되었을 때만 버튼 표시
           <div>
             <button className='storeButton' onClick={storeResult}>결과 저장하기</button>
           </div>
